@@ -1,0 +1,7 @@
+.base-input-nonebg {
+    .el-input__inner {
+        background-color: transparent;
+        border: none;
+        color: var(--text-color-white);
+    }
+}

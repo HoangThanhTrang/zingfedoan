@@ -1,0 +1,31 @@
+.progress-line {
+    &:hover {
+        .el-slider__runway {
+            height: 6px;
+            .el-slider__bar {
+                height: 6px;
+            }
+            .el-slider__button-wrapper {
+                display: block;
+            }
+        }
+    }
+    .el-slider__runway {
+        background: #595560;
+        height: 3px;
+        margin: 0;
+        .el-slider__bar {
+            background: #fff;
+            height: 3px;
+        }
+        .el-slider__button-wrapper {
+            display: none;
+            top: -16px;
+            .el-slider__button {
+                border: none;
+                width: 12px;
+                height: 12px;
+            }
+        }
+    }
+}

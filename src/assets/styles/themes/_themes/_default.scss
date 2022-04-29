@@ -1,0 +1,20 @@
+:root,
+[data-theme="theme-light"] {
+  //color
+  --purple-primary: #7200a1;
+
+  //background
+  --background-color: #170f23;
+  --background-sidebar-color: hsl(0deg 0% 100% / 5%);
+  --alpha-bg: hsl(0deg 0% 100% / 10%);
+  --bg-tab-active: hsl(0deg 0% 100% / 30%);
+
+  //text-color
+  --text-color-white: #fff;
+  --text-color-gray: #dadada;
+  --link-text-hover: #c662ef;
+  --text-subtitle: hsl(0deg 0% 100% / 50%);
+  --top-1: #4a90e2;
+  --top-2: #50e3c2;
+  --top-3: #e35050;
+}
