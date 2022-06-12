@@ -16,7 +16,7 @@
 <style scoped lang="scss">
   .z-header {
     &__search {
-      width: 346px;
+      width: 100%;
       background: var(--alpha-bg);
       border-radius: 30px;
       color: red;

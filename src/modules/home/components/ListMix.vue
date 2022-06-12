@@ -37,7 +37,7 @@
 <style scoped lang="scss">
   .wrap-list {
     .release-item {
-      width: 412px;
+      width: 30%;
       background-color: rgba(255, 255, 255, 0.07);
       border-radius: 5px;
       //   padding-left: 0 15px;
@@ -86,8 +86,10 @@
       }
       .content-mix {
         position: absolute;
-        padding: 0 15px;
-        bottom: 15px;
+        padding: 10px;
+        bottom: 0;
+        width: 95%;
+        overflow-x: scroll;
         .name-artist {
           font-size: 28px;
           white-space: nowrap;

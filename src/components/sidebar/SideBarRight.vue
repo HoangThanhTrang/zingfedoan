@@ -9,26 +9,49 @@
       </div>
     </div>
 
-    <div v-if="currentTrack.encodeId" class="playlist-bar__list be-scroll-custom">
-      <div class="list-recent mb-1">
-        <div class="be-flex recent-item recent-item--active">
-          <div class="thumbnail cursor">
-            <img :src="currentTrack.thumbnailM" :alt="currentTrack.title" class="img-fluid is-40" />
-            <div class="opacity"></div>
-            <div class="overlay">
-              <base-icon icon="play-icon" style="font-size: 20px; color: #fff" />
+    <div v-if="currentTrack.encodeId && activeTab === 1" class="playlist-bar__list be-scroll-custom">
+      <template v-if="recentlyList.length === 1">
+        <div class="list-recent mb-1">
+          <div class="be-flex recent-item recent-item--active">
+            <div class="thumbnail cursor">
+              <img :src="currentTrack.thumbnailM" :alt="currentTrack.title" class="img-fluid is-40" />
+              <div class="opacity"></div>
+              <div class="overlay">
+                <base-icon icon="play-icon" style="font-size: 20px; color: #fff" />
+              </div>
             </div>
-          </div>
-          <div class="content">
-            <div class="text-white title">
-              <span class="break-word-webkit">{{ currentTrack.title }}</span>
-              <div class="artists-small">
-                <span v-for="(artist, index) in currentTrack.artists" :key="artist.id"> {{ index >= currentTrack.artists.length - 1 ? artist.name : artist.name + ',' }}</span>
+            <div class="content">
+              <div class="text-white title">
+                <span class="break-word-webkit">{{ currentTrack.title }}</span>
+                <div class="artists-small">
+                  <span v-for="(artist, index) in currentTrack.artists" :key="artist.id"> {{ index >= currentTrack.artists.length - 1 ? artist.name : artist.name + ',' }}</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </template>
+      <template v-else>
+        <div class="list-recent mb-1">
+          <div class="be-flex recent-item" :class="{'recent-item--active': isActiveItem(song)}" v-for="(song, index) in recentlyList" :key="index">
+            <div class="thumbnail cursor" @click="playSong(song)">
+              <img :src="song.thumbnailM" :alt="song.title" class="img-fluid is-40" />
+              <div class="opacity"></div>
+              <div class="overlay">
+                <base-icon icon="play-icon" style="font-size: 20px; color: #fff"   />
+              </div>
+            </div>
+            <div class="content">
+              <div class="text-white title">
+                <span class="break-word-webkit">{{ song.title }}</span>
+                <div class="artists-small">
+                  <span v-for="(artist, index) in song.artists" :key="artist.id"> {{ index >= song.artists.length - 1 ? artist.name : artist.name + ',' }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
       <div class="list-recent list-recent--scroll">
         <span style="display: block; margin-bottom: 10px; font-weight: 700">Tiếp theo từ gợi ý</span>
         <div class="be-flex recent-item" v-for="(item, index) in recomendList" :key="index">
@@ -50,6 +73,29 @@
         </div>
       </div>
     </div>
+    <div v-else-if="currentTrack.encodeId && activeTab === 0" class="playlist-bar__list be-scroll-custom">
+      <template>
+        <div class="list-recent mb-1">
+          <div class="be-flex recent-item" :class="{'recent-item--active': isActiveItem(song)}" v-for="(song, index) in recentlyList" :key="index">
+            <div class="thumbnail cursor">
+              <img :src="song.thumbnailM" :alt="song.title" class="img-fluid is-40" />
+              <div class="opacity"></div>
+              <div class="overlay">
+                <base-icon icon="play-icon" style="font-size: 20px; color: #fff" />
+              </div>
+            </div>
+            <div class="content">
+              <div class="text-white title">
+                <span class="break-word-webkit">{{ song.title }}</span>
+                <div class="artists-small">
+                  <span v-for="(artist, index) in song.artists" :key="artist.id"> {{ index >= song.artists.length - 1 ? artist.name : artist.name + ',' }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
+    </div>
     <div v-else class="playlist-bar__empty">
       <span class="text-center">Khám phá thêm các bài hát mới của Zing MP3</span>
       <div class="button-play text-white">
@@ -61,7 +107,8 @@
 </template>
 
 <script lang="ts">
-  import { Component, Vue } from 'vue-property-decorator'
+import _ from 'lodash';
+import { Component, Vue, Watch } from 'vue-property-decorator'
   import { namespace } from 'vuex-class'
   const beBase = namespace('beBase')
 
@@ -70,15 +117,43 @@
     @beBase.State('playList') playList!: Array<Record<string, any>>
     @beBase.State('currentTrack') currentTrack!: Array<Record<string, any>>
     @beBase.State('recomendList') recomendList!: Array<Record<string, any>>
+    @beBase.State('recentlyList') recentlyList!: Array<Record<string, any>>
     @beBase.Action('setcurrentTrack') setcurrentTrack!: (song: Record<string, any>) => void
     @beBase.Action('getRecomendSong') getRecomendSong!: (id: string) => void
+    @beBase.Action('setRecentlySong') setRecentlySong!: (song: Record<string, any>) => void
+    @beBase.Action('setRecomendSong') setRecomendSong!: (song: Record<string, any>) => void
+    @beBase.Action('resetRecentlySong') resetRecentlySong!: (songs: Record<string, any>) => void
 
     activeTab = 1
 
     handlePlay(item: Record<string, any>): void {
       this.setcurrentTrack(item)
-      this.getRecomendSong(item.encodeId)
+      this.setRecentlySong(item)
+      if (this.recomendList.length > 0) {
+        this.recomendList?.shift()
+        const recomendList = {
+          items: this.recomendList
+        }
+        this.setRecomendSong(recomendList)
+      }
     }
+    isActiveItem(item: Record<string, any>): boolean {
+     return this.currentTrack.encodeId === item.encodeId
+    }
+
+    @Watch('activeTab')
+    onPropertyChanged(value: string, oldValue: string) {
+      console.log(value)
+    }
+
+    playSong(song: Record<string, any>): void {
+      if (this.currentTrack.encodeId !== song.encodeId) {
+        this.setcurrentTrack(song)
+      }
+    }
+
+
+
   }
 </script>
 

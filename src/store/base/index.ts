@@ -8,6 +8,15 @@ export interface ISBase {
   isPlay: boolean
   playList: Array<Record<string, any>>
   recomendList: Array<Record<string, any>>
+  recentlyList: Array<Record<string, any>>
+  repeat: string,
+  shuffle: boolean,
+  recommendSongsBf: []
+}
+enum Repeat {
+  None = 'none',
+  One = 'one',
+  All = 'all',
 }
 
 const state: ISBase = {
@@ -15,7 +24,11 @@ const state: ISBase = {
   currentTrack: {},
   isPlay: false,
   playList: [],
-  recomendList: []
+  recomendList: [],
+  recentlyList: [],
+  repeat: Repeat.None,
+  shuffle: false,
+  recommendSongsBf: []
 }
 
 const beBase: Module<ISBase, unknown> = {

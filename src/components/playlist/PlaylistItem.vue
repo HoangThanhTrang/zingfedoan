@@ -32,6 +32,8 @@
   import getRepository from '@/services'
   import AlbumRepository from '@/services/repositories/album'
   import { namespace } from 'vuex-class'
+  import _ from 'lodash';
+
   const beBase = namespace('beBase')
 
   const apiAlbum: AlbumRepository = getRepository('album')
@@ -46,11 +48,24 @@
     @beBase.Action('setcurrentTrack') setcurrentTrack!: (song: Record<string, any>) => void
     @beBase.Action('getRecomendSong') getRecomendSong!: (id: string) => void
     @beBase.Action('setPlaySong') setPlaySong!: (status: boolean) => void
+    @beBase.Action('setRecentlySong') setRecentlySong!: (song: Record<string, any>) => void
+    @beBase.State('recentlyList') recentlyList!: Array<Record<string, any>>
+    @beBase.State('recomendList') recomendList!: Array<Record<string, any>>
+    @beBase.Action('setRecomendSong') setRecomendSong!: (song: Record<string, any>) => void
+    @beBase.Action('resetRecentlySong') resetRecentlySong!: (songs: Record<string, any>) => void
+
 
     handlePlay(item: Record<string, any>): void {
       if (this.isShowDes) {
         apiAlbum.getListSongAlbum({ id: item.encodeId }).then(res => {
           this.setcurrentTrack(res.items[0])
+          if (this.recentlyList) {
+            const index = _.findIndex(this.recentlyList, ['encodeId', res.items[0].encodeId])
+            if (index === -1) this.setRecentlySong(res.items[0])
+          } else {
+            this.setRecentlySong(res.items[0])
+          }
+          console.log('123');
           this.setPlaySong(true)
           this.getRecomendSong(res.items[0].encodeId)
         })
@@ -127,4 +142,11 @@
       margin-top: 5px;
     }
   }
+</style>
+
+
+<style lang="css">
+@media screen and (max-width: 575px) {
+
+}
 </style>

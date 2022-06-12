@@ -18,17 +18,23 @@ const actions: ActionTree<ISBase, unknown> = {
     try {
       const params = { id }
       const result = await apiRecomend.getRecomendSong(params)
-      console.log(result, 'result')
       commit('SET_RECOMEND_SONG', result)
+      commit('SET_RECOMEND_SONG_BF', result?.items)
     } catch (error) {
       console.log(error)
     }
   },
 
   setRecomendSong({commit}, list) {
-    console.log('11', list)
     commit('SET_RECOMEND_SONG', list)
+  },
 
+  setRecentlySong({commit}, song) {
+    commit('SET_RECENTLY_SONGS', song)
+  },
+
+  resetRecentlySong({commit}, songs) {
+    commit('RESET_RECENTLY_SONGS', songs)
   }
 }
 

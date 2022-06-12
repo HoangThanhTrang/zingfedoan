@@ -77,3 +77,28 @@
     }
   }
 </style>
+
+<style lang="css">
+@media screen and (max-width: 992px) {
+ .main-layout .sidebar-left {
+   display: none;
+ }
+}
+
+@media screen and (max-width: 1200px) {
+  .main-layout .sidebar-right {
+    display: none;
+  }
+}
+
+@media screen and (max-width: 575px) {
+  .main-layout .main-content .main-header {
+    padding: 0 20px;
+  }
+
+  .main-layout .main-content .main-center {
+    padding: 20px;
+  }
+}
+
+</style>

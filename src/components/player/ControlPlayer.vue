@@ -14,22 +14,26 @@
     <div class="control-player__bar">
       <div class="level-item">
         <div class="be-flex align-center btn-actions">
-          <div class="icon-item text-white cursor">
-            <base-icon icon="shuffle-icon" class="icon" style="font-size: 22px" />
-          </div>
-          <div class="icon-item text-white cursor">
+          <button class="btn" :class="{ active: shuffleStatus }"
+          @click="setShuffleStatus"
+          >
+            <i class="icon ic-shuffle" />
+          </button>
+
+          <div class="icon-item text-white cursor" @click="prevSong">
             <base-icon icon="previous-icon" class="icon" style="font-size: 16px; padding: 6px 8px" />
           </div>
           <div class="icon-item text-white cursor" @click="onPlay">
             <base-icon v-if="audioPlay" icon="pause-icon" class="play-icon" style="font-size: 40px" />
             <base-icon v-else icon="play-icon" class="play-icon" style="font-size: 40px" />
           </div>
-          <div class="icon-item text-white cursor">
+          <div class="icon-item text-white cursor" @click="nextSong">
             <base-icon icon="next-icon" class="icon" style="font-size: 16px; padding: 6px 8px" />
           </div>
-          <div class="icon-item text-white cursor">
-            <base-icon icon="repeat-icon" class="icon" style="font-size: 22px" />
-          </div>
+          <button class="btn" :class="{ active: repeatStatus !== 'none' }" @click="toggleRepeat">
+            <i class="icon ic-repeat" v-if="['all', 'none', undefined].includes(repeatStatus)"></i>
+            <i class="icon ic-repeat-one" v-if="repeatStatus === 'one'" />
+          </button>
         </div>
       </div>
       <div class="progress-bar">
@@ -40,7 +44,6 @@
           <div class="line-cricle" :style="{ left: circleLeft }"></div>
         </div> -->
         <el-slider v-model="timePlay" :show-tooltip="false" class="progress-line" @change="handleChangeSlider"></el-slider>
-
         <span class="time time-total">{{ currentTrack.duration | formatTimeTotal }}</span>
       </div>
     </div>
@@ -57,18 +60,37 @@
 </template>
 
 <script lang="ts">
-  import { Component, Vue, Watch } from 'vue-property-decorator'
+  import { Component, Vue, Watch, Computed } from 'vue-property-decorator'
   import { namespace } from 'vuex-class'
   const beBase = namespace('beBase')
+  import { mapGetters, mapActions } from 'vuex'
+
+  enum Repeat {
+    None = 'none',
+    One = 'one',
+    All = 'all'
+  }
 
   import getRepository from '@/services'
   import PlayerRepository from '@/services/repositories/player'
+  import _ from 'lodash'
   const apiPlayer: PlayerRepository = getRepository('player')
 
   @Component
   export default class ControlPlayer extends Vue {
     @beBase.State('currentTrack') currentTrack!: Record<string, any>
+    @beBase.Mutation('SET_REPEAT_SONG') SET_REPEAT_SONG
+    @beBase.Mutation('SET_SHUFFLE_SONG') SET_SHUFFLE_SONG
+    @beBase.State('repeat') repeat
+    @beBase.State('shuffle') shuffle
     @beBase.Action('setPlaySong') setPlaySong!: (status: boolean) => void
+    @beBase.State('recentlyList') recentlyList!: Array<Record<string, any>>
+    @beBase.Action('getRecomendSong') getRecomendSong!: (id: string) => void
+    @beBase.State('recomendList') recomendList!: Array<Record<string, any>>
+    @beBase.Action('setcurrentTrack') setcurrentTrack!: (song: Record<string, any>) => void
+    @beBase.Action('setRecentlySong') setRecentlySong!: (song: Record<string, any>) => void
+    @beBase.Action('setRecomendSong') setRecomendSong!: (song: Record<string, any>) => void
+    @beBase.Action('resetRecentlySong') resetRecentlySong!: (songs: Record<string, any>) => void
 
     audio: Record<string, any> = {}
     timeCurent = '00:00'
@@ -79,11 +101,42 @@
     elmSliderBarButton: any = null
     timePlay = 0
     volume = 0.5
+
+    get repeatStatus() {
+      return this.repeat
+    }
+
+    get shuffleStatus() {
+      return this.shuffle
+    }
+
+    toggleRepeat() {
+      switch (this.repeat) {
+        case 'none':
+        case undefined:
+          this.SET_REPEAT_SONG('one')
+          break
+        case 'one':
+          this.SET_REPEAT_SONG('all')
+          break
+        case 'all':
+          this.SET_REPEAT_SONG('none')
+          break
+      }
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    setShuffleStatus() {
+      this.SET_SHUFFLE_SONG();
+    }
     created(): void {
       this.audio = new Audio()
       this.audio.volume = this.volume
       this.audio.ontimeupdate = () => {
         this.generateTime()
+      }
+      this.audio.onended = () => {
+        this.nextSong()
       }
     }
     mounted(): void {
@@ -91,7 +144,6 @@
       const slider_bar_button = document.querySelector('.el-slider__button-wrapper')
       this.elmSliderBar = slider_bar
       this.elmSliderBarButton = slider_bar_button
-      console.log(slider_bar)
     }
 
     @Watch('currentTrack.encodeId', { immediate: true }) watchCurentTrack(new_: string): void {
@@ -101,6 +153,39 @@
     onPlay(): void {
       this.audioPlay = !this.audioPlay
       this.audioPlay ? this.audio.play() : this.audio.pause()
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    nextSong() {
+      this.audio.pause()
+      if (this.repeatStatus === 'one') {
+        this.audio.currentTime = 0
+        this.audio.play()
+      } else {
+        this.setcurrentTrack(this.recomendList[0])
+        this.setRecentlySong(this.recomendList[0])
+        if (this.recomendList.length > 0) {
+          this.recomendList.shift()
+          const recomendList = {
+            items: this.recomendList
+          }
+          this.setRecomendSong(recomendList)
+        }
+      }
+    }
+
+    prevSong() {
+      const indexSongPlay = _.findIndex(this.recentlyList, ['encodeId', this.currentTrack.encodeId])
+      if (indexSongPlay !== 0) {
+        this.recomendList.unshift(this.currentTrack)
+        this.setcurrentTrack(this.recentlyList[indexSongPlay - 1])
+        this.recentlyList.splice(indexSongPlay, 1)
+        this.resetRecentlySong(this.recentlyList)
+        const recomendList = {
+          items: this.recomendList
+        }
+        this.setRecomendSong(recomendList)
+      }
     }
 
     handleClickIconAudio(status: boolean): void {
@@ -286,6 +371,45 @@
     .icon {
       padding: 3px 5px;
       border-radius: 50%;
+    }
+  }
+
+  .btn {
+    cursor: pointer;
+    text-align: center;
+    user-select: none;
+    outline: none;
+    border: none;
+    position: relative;
+    font-weight: 400;
+    text-transform: none;
+    font-size: 14px;
+    line-height: 1;
+    display: inline-block;
+    padding: 10px;
+    color: #fff;
+    background: var(--alpha-bg);
+    font-size: 16px;
+    background: transparent;
+    margin: 0 13px;
+    line-height: 0;
+    padding: 0;
+
+    .icon {
+      font-family: 'zing-mp3';
+      display: flex;
+      font-size: 22px;
+    }
+
+    &.active {
+      color: #7200a1;
+    }
+
+    .ic-repeat:before {
+      content: 'Y';
+    }
+    .ic-repeat-one:before {
+      content: 'Z';
     }
   }
 </style>

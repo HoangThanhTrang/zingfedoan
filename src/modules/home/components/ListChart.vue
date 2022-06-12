@@ -148,3 +148,31 @@
     }
   }
 </style>
+
+<style lang="css">
+@media screen and (max-width: 1600px) {
+  .list-chart .chart-item {
+    display: block;
+  }
+
+  .list-chart .chart-item .chart-item__left {
+    display: block;
+  }
+
+  .list-chart .chart-item__left .thumb {
+    margin: 0;
+  }
+
+  .list-chart .chart-item__left .thumb img {
+    width: 100%;
+    height: 100%;
+  }
+
+  .list-banner .banner-item {
+    width: 25% !important;
+  }
+
+}
+
+
+</style>

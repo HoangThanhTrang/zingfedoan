@@ -128,3 +128,24 @@
     }
   }
 </style>
+
+<style lang="css">
+@media screen and (max-width: 1600px) {
+  .wrap-list-release .wrap-list .release-item {
+    display: block;
+  }
+
+  .wrap-list .release-item .thumbnail img {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+@media screen and (max-width: 767px) {
+  .wrap-list .release-item .content .rank {
+    display: block;
+  }
+}
+
+
+</style>
